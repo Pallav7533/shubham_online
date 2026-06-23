@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "RXFvpFWzoqXum2SeaeCeF"
+uri = "file://artifacts/shubham-online/public/images/hero.png"
+type = "image"
+title = "Indian service center cafe"
+
+[[generated]]
+id = "b-h8d7m3Czpo1T2nHZARd"
+uri = "file://artifacts/shubham-online/public/images/edu.png"
+type = "image"
+title = "Education books illustration"
+
+[[generated]]
+id = "im4ZzolI-A6OnLZq_FCSF"
+uri = "file://artifacts/shubham-online/public/images/gov.png"
+type = "image"
+title = "Government seal illustration"
+
+[[generated]]
+id = "khpHuYdqLPFBDYu_7wIUq"
+uri = "file://artifacts/shubham-online/public/images/job.png"
+type = "image"
+title = "Job briefcase illustration"
+
+[[generated]]
+id = "gej8VLdahkHFRRxiP27Uv"
+uri = "file://artifacts/shubham-online/public/images/office.png"
+type = "image"
+title = "Gujarat office ambiance"

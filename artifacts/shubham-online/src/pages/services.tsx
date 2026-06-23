@@ -2,14 +2,16 @@ import ClientLayout from "@/components/layout/ClientLayout";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, GraduationCap, Landmark, Briefcase } from "lucide-react";
+import { ArrowRight, GraduationCap, Landmark, Briefcase, FileText } from "lucide-react";
 
 const services = [
   {
     category: "શૈક્ષણિક સેવાઓ",
     icon: GraduationCap,
-    color: "text-blue-600",
-    bgColor: "bg-blue-100",
+    image: "/images/edu.png",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-100",
     items: [
       { name: "કોલેજ એડમિશન ફોર્મ", desc: "કોઈપણ કોલેજમાં ઓનલાઈન એડમિશન ફોર્મ ભરાવો." },
       { name: "ITI એડમિશન", desc: "ITI માં પ્રવેશ માટેનું સંપૂર્ણ ઓનલાઈન ફોર્મ." },
@@ -21,8 +23,10 @@ const services = [
   {
     category: "સરકારી સેવાઓ",
     icon: Landmark,
-    color: "text-orange-500",
-    bgColor: "bg-orange-100",
+    image: "/images/gov.png",
+    color: "text-orange-600",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-100",
     items: [
       { name: "PAN કાર્ડ", desc: "નવું PAN કાર્ડ કાઢવા અથવા સુધારો કરવા." },
       { name: "પાસપોર્ટ સહાય", desc: "નવો પાસપોર્ટ અને રિન્યુઅલ માટેની સહાય." },
@@ -35,8 +39,10 @@ const services = [
   {
     category: "નોકરી સેવાઓ",
     icon: Briefcase,
-    color: "text-teal-600",
-    bgColor: "bg-teal-100",
+    image: "/images/job.png",
+    color: "text-teal-700",
+    bgColor: "bg-teal-50",
+    borderColor: "border-teal-100",
     items: [
       { name: "GPSC ફોર્મ", desc: "ગુજરાત જાહેર સેવા આયોગની તમામ ભરતીના ફોર્મ." },
       { name: "GSSSB ફોર્મ", desc: "ગૌણ સેવા પસંદગી મંડળની ભરતીઓ." },
@@ -50,11 +56,17 @@ const services = [
 export default function Services() {
   return (
     <ClientLayout>
-      <div className="bg-slate-50 py-12 border-b">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="bg-primary text-white pt-32 pb-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-pattern-texture opacity-20"></div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">અમારી ઓનલાઈન સેવાઓ</h1>
-            <p className="text-lg text-slate-600">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-secondary mb-6">
+              <FileText className="w-4 h-4" />
+              <span className="text-sm font-semibold tracking-wide">અમારી તમામ સેવાઓ</span>
+            </div>
+            <h1 className="font-serif text-4xl md:text-6xl font-bold mb-6">ઓનલાઈન સેવાઓ</h1>
+            <p className="font-sans text-xl text-white/80 leading-relaxed">
               તમારું કામ સરળ બનાવવા માટે અમે વિવિધ પ્રકારની ઓનલાઈન સેવાઓ પ્રદાન કરીએ છીએ. 
               નીચે મુજબની સેવાઓમાંથી પસંદગી કરો.
             </p>
@@ -62,32 +74,41 @@ export default function Services() {
         </div>
       </div>
 
-      <div className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
+      {/* Services List */}
+      <div className="py-24 bg-slate-50 relative">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-32">
           {services.map((category, idx) => {
             const Icon = category.icon;
             return (
-              <div key={idx} className="space-y-8">
-                <div className="flex items-center gap-4 border-b pb-4">
-                  <div className={`p-3 rounded-xl ${category.bgColor} ${category.color}`}>
-                    <Icon className="w-8 h-8" />
+              <div key={idx} className="relative">
+                {/* Category Header with Image */}
+                <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
+                  <div className={`w-32 h-32 md:w-48 md:h-48 rounded-3xl overflow-hidden shrink-0 shadow-lg border-4 border-white`}>
+                    <img src={category.image} alt={category.category} className="w-full h-full object-cover" />
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-slate-900">{category.category}</h2>
+                  <div>
+                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${category.bgColor} ${category.color} mb-4 font-bold tracking-wide text-sm border ${category.borderColor}`}>
+                      <Icon className="w-5 h-5" />
+                      કેટેગરી
+                    </div>
+                    <h2 className="font-serif text-3xl md:text-5xl font-bold text-primary">{category.category}</h2>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {category.items.map((item, itemIdx) => (
-                    <Card key={itemIdx} className="hover:shadow-md transition-shadow border-slate-200">
-                      <CardHeader>
-                        <CardTitle className="text-xl text-slate-800">{item.name}</CardTitle>
-                        <CardDescription className="text-slate-500 text-sm mt-2 leading-relaxed">
+                    <Card key={itemIdx} className="group border-0 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white overflow-hidden flex flex-col">
+                      <div className={`h-2 w-full ${category.bgColor}`}></div>
+                      <CardHeader className="flex-1 pb-4">
+                        <CardTitle className="font-serif text-2xl text-primary group-hover:text-secondary transition-colors">{item.name}</CardTitle>
+                        <CardDescription className="font-sans text-slate-600 text-base mt-3 leading-relaxed">
                           {item.desc}
                         </CardDescription>
                       </CardHeader>
-                      <CardFooter>
-                        <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white" asChild>
+                      <CardFooter className="pt-4 pb-6 px-6">
+                        <Button className="w-full font-bold bg-primary hover:bg-primary/90 text-white h-12 rounded-xl transition-all group-hover:bg-secondary group-hover:text-primary" asChild>
                           <Link href={`/apply?service=${encodeURIComponent(item.name)}`}>
-                            અરજી કરો <ArrowRight className="ml-2 w-4 h-4" />
+                            અરજી કરો <ArrowRight className="ml-2 w-5 h-5" />
                           </Link>
                         </Button>
                       </CardFooter>
