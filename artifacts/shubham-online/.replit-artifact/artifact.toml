@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Shubham Online"
+version = "1.0.0"
+id = "artifacts/shubham-online"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19614
+
+[services.development]
+run = "pnpm --filter @workspace/shubham-online run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/shubham-online", "run", "build" ]
+publicDir = "artifacts/shubham-online/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19614"
+BASE_PATH = "/"

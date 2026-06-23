@@ -1,0 +1,208 @@
+Create a modern, professional, mobile-responsive Gujarati-language website for an online service center called "Shubham Online".
+
+The business provides online form filling and digital services for students, citizens, and job seekers across Gujarat.
+
+Design Language:
+
+* Entire website in Gujarati language.
+* Professional, trustworthy, government-service style design.
+* Clean UI with modern cards, icons, and responsive layout.
+* White background with blue and saffron accents.
+* Mobile-first design.
+* Fast loading and easy navigation.
+
+Website Pages:
+
+1. Home Page
+
+* Hero section with headline:
+  "તમારી તમામ ઓનલાઈન સેવાઓ હવે ઘર બેઠા"
+* Subheading:
+  "એડમિશન ફોર્મ, સરકારી યોજનાઓ, નોકરી ફોર્મ, સ્કોલરશિપ, PAN, પાસપોર્ટ અને અન્ય ઓનલાઈન સેવાઓ"
+* Call To Action Button:
+  "સેવા શરૂ કરો"
+* Display service categories with icons.
+* Display trust section:
+
+  * ઝડપી સેવા
+  * સુરક્ષિત દસ્તાવેજ વ્યવસ્થા
+  * ઓનલાઈન સહાય
+  * ગુજરાતભરમાં સેવા
+
+2. Services Page
+
+Create service cards for:
+
+Education Services:
+
+* કોલેજ એડમિશન
+* ITI એડમિશન
+* પોલિટેકનિક એડમિશન
+* સ્કોલરશિપ ફોર્મ
+* યુનિવર્સિટી ફોર્મ
+
+Government Services:
+
+* PAN કાર્ડ
+* પાસપોર્ટ સહાય
+* આવકનો દાખલો
+* જાતિનો દાખલો
+* EWS પ્રમાણપત્ર
+* આધાર અપડેટ માર્ગદર્શન
+
+Job Services:
+
+* GPSC
+* GSSSB
+* પોલીસ ભરતી
+* રેલવે ભરતી
+* બેન્ક ભરતી
+
+Each service card should contain:
+
+* Service name
+* Short description
+* Apply Now button
+
+3. Service Request Form
+
+When user clicks Apply Now:
+
+Collect:
+
+* Full Name
+* Mobile Number
+* Email Address
+* City
+* Service Type
+* Additional Notes
+
+Document Upload Section:
+
+* Aadhaar Card
+* Passport Photo
+* Signature
+* Marksheet
+* Other Documents
+
+File formats:
+PDF, JPG, PNG
+
+Maximum size:
+10 MB per file
+
+4. Payment Page
+
+Do NOT integrate payment gateway.
+
+Instead display:
+
+"સેવા ચાર્જ ચૂકવવા માટે નીચે આપેલ QR કોડ સ્કેન કરો"
+
+Show:
+
+* Large QR Code Placeholder
+* UPI ID Placeholder
+* Payment Instructions
+
+After payment:
+User uploads payment screenshot.
+
+Fields:
+
+* Transaction ID
+* Payment Screenshot Upload
+
+5. Contact Page
+
+Display:
+
+Office Name:
+Shubham Online
+
+Contact Number:
++91 XXXXXXXXXX
+
+WhatsApp Button
+
+Email Address
+
+Office Address
+
+Google Map Placeholder
+
+Working Hours:
+સોમવારથી શનિવાર
+સવારે 9:00 થી સાંજે 7:00
+
+6. Help Center Page
+
+Frequently Asked Questions:
+
+* ફોર્મ ભરાવવા કેટલો સમય લાગે?
+* દસ્તાવેજો કયા જરૂરી છે?
+* ચુકવણી કેવી રીતે કરવી?
+* સ્ટેટસ કેવી રીતે જાણવા?
+
+7. About Us Page
+
+Professional Gujarati content explaining:
+
+* Business mission
+* Online service expertise
+* Student assistance
+* Government form support
+
+Admin Panel Requirements:
+
+Secure Admin Login
+
+Dashboard Statistics:
+
+* Total Requests
+* Pending Requests
+* Completed Requests
+* Today's Requests
+
+Request Management:
+
+* View customer details
+* View uploaded documents
+* Download documents
+* Update status
+
+Status Options:
+
+* Pending
+* Under Process
+* Completed
+* Rejected
+
+Search and Filter:
+
+* By Mobile Number
+* By Service
+* By Date
+
+Customer Management:
+
+* View all customers
+* View request history
+
+Notification System:
+
+* Admin receives notification on new request
+
+Generate a professional admin dashboard with sidebar navigation.
+
+Technical Requirements:
+
+* Responsive design
+* Modern card layout
+* Gujarati Unicode support
+* Form validation
+* Clean code structure
+* SEO-friendly pages
+* Professional typography
+
+The final website should look like a premium Gujarati digital service portal and be suitable for cyber cafes, admission centers, CSC centers, and online service businesses across Gujarat.

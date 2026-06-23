@@ -1,15 +1,19 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Shubham Online Service Center API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: requests
+    description: Service request operations
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
@@ -24,6 +28,193 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /requests:
+    get:
+      operationId: listRequests
+      tags: [requests]
+      summary: List all service requests
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: service
+          in: query
+          schema:
+            type: string
+        - name: mobile
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceRequest"
+
+    post:
+      operationId: createRequest
+      tags: [requests]
+      summary: Create a new service request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /requests/{id}:
+    get:
+      operationId: getRequest
+      tags: [requests]
+      summary: Get a service request by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+        "404":
+          description: Not found
+
+    patch:
+      operationId: updateRequest
+      tags: [requests]
+      summary: Update a service request (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequestUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /requests/{id}/payment:
+    patch:
+      operationId: updatePayment
+      tags: [requests]
+      summary: Update payment info for a request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInfo"
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /requests/upload:
+    post:
+      operationId: uploadDocument
+      tags: [requests]
+      summary: Upload a document for a request
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DocumentUpload"
+      responses:
+        "201":
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadedDocument"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCredentials"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+        "401":
+          description: Unauthorized
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/logout:
+    post:
+      operationId: adminLogout
+      tags: [admin]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSession"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +225,133 @@ components:
       required:
         - status
 
+    ServiceRequest:
+      type: object
+      required: [id, fullName, mobile, city, serviceType, status, createdAt]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        mobile:
+          type: string
+        email:
+          type: ["string", "null"]
+        city:
+          type: string
+        serviceType:
+          type: string
+        notes:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, processing, completed, rejected]
+        transactionId:
+          type: ["string", "null"]
+        paymentScreenshot:
+          type: ["string", "null"]
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/UploadedDocument"
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ServiceRequestInput:
+      type: object
+      required: [fullName, mobile, city, serviceType]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        mobile:
+          type: string
+          minLength: 10
+        email:
+          type: string
+        city:
+          type: string
+          minLength: 1
+        serviceType:
+          type: string
+          minLength: 1
+        notes:
+          type: string
+
+    ServiceRequestUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, processing, completed, rejected]
+        notes:
+          type: string
+
+    PaymentInfo:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        paymentScreenshot:
+          type: string
+
+    DocumentUpload:
+      type: object
+      required: [requestId, docType]
+      properties:
+        requestId:
+          type: integer
+        docType:
+          type: string
+
+    UploadedDocument:
+      type: object
+      required: [id, requestId, docType, filename, url]
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        docType:
+          type: string
+        filename:
+          type: string
+        url:
+          type: string
+
+    AdminCredentials:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    AdminSession:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    AdminStats:
+      type: object
+      required: [total, pending, processing, completed, rejected, today]
+      properties:
+        total:
+          type: integer
+        pending:
+          type: integer
+        processing:
+          type: integer
+        completed:
+          type: integer
+        rejected:
+          type: integer
+        today:
+          type: integer
