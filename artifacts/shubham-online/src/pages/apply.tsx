@@ -5,7 +5,7 @@ import { useLocation, useSearch } from "wouter";
 import { useCreateRequest } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import ClientLayout from "@/components/layout/ClientLayout";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -208,21 +208,24 @@ export default function Apply() {
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <FormLabel className="text-base font-medium text-slate-700">આધાર કાર્ડ</FormLabel>
+                        <label className="text-base font-medium text-slate-700">આધાર કાર્ડ</label>
                         <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 cursor-pointer" />
-                        <FormDescription>PDF અથવા ઇમેજ (મેક્સ. 10MB)</FormDescription>
+                        <p className="text-sm text-muted-foreground">PDF અથવા ઇમેજ (મેક્સ. 10MB)</p>
                       </div>
                       <div className="space-y-2">
-                        <FormLabel className="text-base font-medium text-slate-700">પાસપોર્ટ સાઇઝ ફોટો</FormLabel>
+                        <label className="text-base font-medium text-slate-700">પાસપોર્ટ સાઇઝ ફોટો</label>
                         <Input type="file" accept=".jpg,.jpeg,.png" className="file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 cursor-pointer" />
+                        <p className="text-sm text-muted-foreground">JPG અથવા PNG (મેક્સ. 10MB)</p>
                       </div>
                       <div className="space-y-2">
-                        <FormLabel className="text-base font-medium text-slate-700">સહી (Signature)</FormLabel>
+                        <label className="text-base font-medium text-slate-700">સહી (Signature)</label>
                         <Input type="file" accept=".jpg,.jpeg,.png" className="file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 cursor-pointer" />
+                        <p className="text-sm text-muted-foreground">JPG અથવા PNG (મેક્સ. 10MB)</p>
                       </div>
                       <div className="space-y-2">
-                        <FormLabel className="text-base font-medium text-slate-700">માર્કશીટ/અન્ય દસ્તાવેજ</FormLabel>
+                        <label className="text-base font-medium text-slate-700">માર્કશીટ/અન્ય દસ્તાવેજ</label>
                         <Input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple className="file:bg-primary/10 file:text-primary file:border-0 file:rounded-md file:px-4 file:py-1 cursor-pointer" />
+                        <p className="text-sm text-muted-foreground">PDF અથવા ઇમેજ (મેક્સ. 10MB)</p>
                       </div>
                     </div>
                   </div>
