@@ -30,24 +30,18 @@ export default function Navbar() {
       className={cn(
         "fixed top-0 z-50 w-full transition-all duration-300",
         scrolled 
-          ? "bg-primary text-white shadow-md py-3" 
-          : "bg-transparent text-primary py-5"
+          ? "bg-primary shadow-lg py-3" 
+          : "bg-primary/60 backdrop-blur-md py-5"
       )}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className={cn(
-                "p-2 rounded-xl transition-colors duration-300",
-                scrolled ? "bg-white/10 text-secondary" : "bg-primary text-secondary"
-              )}>
+              <div className="p-2 rounded-xl bg-white/10 text-secondary transition-colors duration-300">
                 <FileText className="h-6 w-6" />
               </div>
-              <span className={cn(
-                "text-2xl font-serif font-bold tracking-tight transition-colors duration-300",
-                scrolled ? "text-white" : "text-primary group-hover:text-primary/80"
-              )}>
+              <span className="text-2xl font-serif font-bold tracking-tight text-white">
                 શુભમ ઓનલાઈન
               </span>
             </Link>
@@ -63,27 +57,19 @@ export default function Navbar() {
                   href={link.href}
                   className={cn(
                     "text-sm font-medium transition-all duration-300 relative py-2 font-sans",
-                    scrolled ? (isActive ? "text-secondary" : "text-white/80 hover:text-white") : (isActive ? "text-primary font-semibold" : "text-primary/70 hover:text-primary")
+                    isActive ? "text-secondary" : "text-white/80 hover:text-white"
                   )}
                 >
                   {link.label}
                   {isActive && (
-                    <span className={cn(
-                      "absolute bottom-0 left-0 w-full h-0.5 rounded-full",
-                      scrolled ? "bg-secondary" : "bg-primary"
-                    )} />
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 rounded-full bg-secondary" />
                   )}
                 </Link>
               );
             })}
             <Button 
               asChild 
-              className={cn(
-                "font-semibold rounded-full px-6 transition-all duration-300 hover:scale-105",
-                scrolled 
-                  ? "bg-secondary text-primary hover:bg-secondary/90 shadow-[0_0_15px_rgba(245,158,11,0.3)]" 
-                  : "bg-primary text-white hover:bg-primary/90 shadow-lg"
-              )}
+              className="font-semibold rounded-full px-6 transition-all duration-300 hover:scale-105 bg-secondary text-primary hover:bg-secondary/90 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
             >
               <Link href="/services">
                 <span>અરજી કરો</span>
@@ -98,9 +84,9 @@ export default function Navbar() {
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? (
-              <X className={cn("h-6 w-6", scrolled ? "text-white" : "text-primary")} />
+              <X className="h-6 w-6 text-white" />
             ) : (
-              <Menu className={cn("h-6 w-6", scrolled ? "text-white" : "text-primary")} />
+              <Menu className="h-6 w-6 text-white" />
             )}
           </button>
         </div>
