@@ -62,7 +62,7 @@ export default function Home() {
       </section>
 
       {/* Trust Stats Section */}
-      <section className="py-16 bg-white border-b border-slate-100 relative z-20 -mt-10 mx-4 sm:mx-8 lg:mx-auto lg:max-w-6xl rounded-3xl shadow-xl">
+      <section className="py-16 bg-white border-b border-slate-100 relative z-10 mx-4 sm:mx-8 lg:mx-auto lg:max-w-6xl rounded-3xl shadow-xl -mt-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-8 text-center divide-x divide-slate-100">
           <div className="p-4 transform transition-transform hover:-translate-y-1">
             <h4 className="font-serif text-4xl font-bold text-primary mb-2">500<span className="text-secondary">+</span></h4>
