@@ -36,8 +36,8 @@ export default function Contact() {
                     <h3 className="font-serif font-bold text-xl text-primary mb-3">સરનામું</h3>
                     <p className="font-sans text-slate-600 leading-relaxed text-lg">
                       શુભમ ઓનલાઈન,<br />
-                      મુખ્ય બજાર, સિટી સેન્ટર કોમ્પ્લેક્સ,<br />
-                      રાજકોટ, ગુજરાત - 360001
+                      ભણસાલી હોસ્પીટલ ના પાછળ ના દરવાજા ની સામે,<br />
+                      કોલેજ રોડ, ડીસા,385535
                     </p>
                   </div>
                 </CardContent>
@@ -51,9 +51,9 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-serif font-bold text-xl text-primary mb-3">ફોન અને WhatsApp</h3>
-                    <p className="font-sans text-slate-600 mb-4 text-lg font-medium tracking-wide">+91 99999 99999</p>
+                    <p className="font-sans text-slate-600 mb-4 text-lg font-medium tracking-wide">+91 76980 74734</p>
                     <a 
-                      href="https://wa.me/919999999999" 
+                      href="https://wa.me/917698074734" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 bg-[#25D366] text-white px-6 py-3 rounded-full font-bold hover:bg-[#1ebd5a] transition-all hover:scale-105 shadow-md"
@@ -96,15 +96,28 @@ export default function Contact() {
             </div>
 
             {/* Map Placeholder */}
-            <div className="h-full min-h-[600px] bg-slate-200 rounded-3xl overflow-hidden relative shadow-xl border-8 border-white">
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-primary bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                <div className="bg-white p-6 rounded-full shadow-lg mb-6 animate-bounce">
-                  <MapPin className="w-16 h-16 text-secondary" />
-                </div>
-                <span className="font-serif text-3xl font-bold mb-2 text-primary">Google Map</span>
-                <span className="font-sans text-lg font-medium text-slate-600">રાજકોટ, ગુજરાત</span>
-              </div>
-            </div>
+            <div className="h-full min-h-[600px] rounded-3xl overflow-hidden shadow-xl border-8 border-white flex flex-col">
+  <div className="flex-1">
+    <iframe
+      src="https://www.google.com/maps?q=College+Road+Deesa+Gujarat&output=embed"
+      width="100%"
+      height="100%"
+      style={{ border: 0 }}
+      allowFullScreen
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+    />
+  </div>
+
+  <div className="bg-white py-4 text-center border-t">
+    <h3 className="text-2xl font-bold text-primary">
+      શુભમ ઑનલાઇન
+    </h3>
+    <p className="text-gray-600">
+      ડીસા, ગુજરાત
+    </p>
+  </div>
+</div>
 
           </div>
         </div>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/", label: "મુખ્ય પૃષ્ઠ" },
+  { href: "/", label: "હોમ પેજ" },
   { href: "/services", label: "સેવાઓ" },
   { href: "/about", label: "અમારા વિશે" },
   { href: "/help", label: "મદદ" },

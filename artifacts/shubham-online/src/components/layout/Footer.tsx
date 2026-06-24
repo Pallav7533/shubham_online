@@ -23,7 +23,7 @@ export default function Footer() {
           <div>
             <h3 className="text-secondary font-serif font-bold mb-6 text-xl">ઝડપી લિંક્સ</h3>
             <ul className="space-y-3 text-sm font-sans">
-              <li><Link href="/" className="text-white/70 hover:text-secondary transition-colors inline-block transform hover:translate-x-1">મુખ્ય પૃષ્ઠ</Link></li>
+              <li><Link href="/" className="text-white/70 hover:text-secondary transition-colors inline-block transform hover:translate-x-1">હોમ પેજ</Link></li>
               <li><Link href="/services" className="text-white/70 hover:text-secondary transition-colors inline-block transform hover:translate-x-1">સેવાઓ</Link></li>
               <li><Link href="/about" className="text-white/70 hover:text-secondary transition-colors inline-block transform hover:translate-x-1">અમારા વિશે</Link></li>
               <li><Link href="/help" className="text-white/70 hover:text-secondary transition-colors inline-block transform hover:translate-x-1">વારંવાર પૂછાતા પ્રશ્નો</Link></li>
@@ -46,13 +46,13 @@ export default function Footer() {
                 <div className="bg-white/5 p-2 rounded text-secondary group-hover:bg-secondary group-hover:text-primary transition-colors">
                   <MapPin className="w-4 h-4 shrink-0" />
                 </div>
-                <span className="text-white/70 pt-1 leading-relaxed">મુખ્ય બજાર, રાજકોટ, ગુજરાત - 360001</span>
+                <span className="text-white/70 pt-1 leading-relaxed">શુભમ ઓનલાઈન, ભણસાલી હોસ્પીટલ ના પાછળ ના દરવાજા ની સામે, કોલેજ રોડ, ડીસા,385535</span>
               </li>
               <li className="flex items-center gap-3 group">
                 <div className="bg-white/5 p-2 rounded text-secondary group-hover:bg-secondary group-hover:text-primary transition-colors">
                   <Phone className="w-4 h-4 shrink-0" />
                 </div>
-                <span className="text-white/70">+91 99999 99999</span>
+                <span className="text-white/70">+91 76980 74734</span>
               </li>
               <li className="flex items-center gap-3 group">
                 <div className="bg-white/5 p-2 rounded text-secondary group-hover:bg-secondary group-hover:text-primary transition-colors">

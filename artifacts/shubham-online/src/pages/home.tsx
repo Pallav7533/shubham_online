@@ -48,18 +48,23 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-500">
-              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-primary text-lg font-bold px-8 py-7 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all hover:scale-105" asChild>
+              <Button size="lg" className="bg-secondary hover:bg-secondary/90 text-primary text-lg font-bold px-10 py-6.5 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all hover:scale-105" asChild>
                 <Link href="/services">
                   સેવા શરૂ કરો <ArrowRight className="ml-2 w-5 h-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-7 rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm transition-all" asChild>
+              <Button size="lg" variant="outline" className="text-lg px-10 py-6.5 rounded-full border-white/20 text-white hover:bg-white/10 backdrop-blur-sm transition-all" asChild>
                 <Link href="/contact">સંપર્ક કરો</Link>
               </Button>
             </div>
           </div>
+          <br></br>
+          <br></br>
+          
         </div>
       </section>
+      <br></br>
+
 
       {/* Trust Stats Section */}
       <section className="py-16 bg-white border-b border-slate-100 relative z-10 mx-4 sm:mx-8 lg:mx-auto lg:max-w-6xl rounded-3xl shadow-xl -mt-12">
