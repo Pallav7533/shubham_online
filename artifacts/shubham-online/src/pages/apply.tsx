@@ -58,16 +58,11 @@ async function uploadFileToServer(
     formData.append("docType", docType);
 
     const xhr = new XMLHttpRequest();
-    const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "https://shubham-online.onrender.com";
-  
-  console.log("UPLOAD URL =>", `${API_URL}/api/requests/upload`);
-  
-  xhr.open(
-    "POST",
-    `${API_URL}/api/requests/upload`
-  );
+    const API_URL = import.meta.env.VITE_API_URL;
+    xhr.open(
+      "POST",
+      `${API_URL}/api/requests/upload`
+    );
 
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable) {
