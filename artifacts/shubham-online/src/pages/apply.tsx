@@ -424,11 +424,11 @@ export default function Apply() {
                       <div className="p-8 text-center text-white relative">
                         <div className="absolute inset-0 bg-pattern-texture opacity-20"></div>
                         <div className="relative z-10">
-                          <div className="bg-white p-4 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center mb-4 shadow-lg">
-                            <QrCode className="w-32 h-32 text-primary" />
-                          </div>
+                        <div className="bg-white p-2 rounded-2xl w-44 h-44 mx-auto flex items-center justify-center mb-4 shadow-lg">
+  <img src="/qr-code.png" alt="QR Code" className="w-full h-full object-contain rounded-xl" />
+</div>
                           <h4 className="font-serif text-xl font-bold mb-1">QR કોડ સ્કેન કરો</h4>
-                          <p className="font-mono text-lg tracking-widest text-secondary font-bold bg-black/30 inline-block px-5 py-1.5 rounded-lg border border-white/10">shubhamonline@upi</p>
+                          <p className="font-mono text-lg tracking-widest text-secondary font-bold bg-black/30 inline-block px-5 py-1.5 rounded-lg border border-white/10">pallavchavda@ybl</p>
                         </div>
                       </div>
 
