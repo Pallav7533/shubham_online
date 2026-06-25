@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, FileText, Image as ImageIcon, CheckCircle2, Clock, RefreshCw, XCircle } from "lucide-react";
+import { Loader2, Search, FileText, Image as ImageIcon, CheckCircle2, Clock, RefreshCw, XCircle, Download, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -16,27 +16,97 @@ const statusMap: Record<string, { label: string, badgeClass: string, icon: any }
   rejected: { label: "રદ કરેલ", badgeClass: "bg-red-100 text-red-800 border-red-200", icon: XCircle }
 };
 
+interface UploadedDocument {
+  id: number;
+  requestId: number;
+  docType: string;
+  filename: string;
+  url: string;
+}
+
+function isPdf(doc: UploadedDocument): boolean {
+  return (
+    doc.filename.toLowerCase().endsWith(".pdf") ||
+    doc.docType === "pdf"
+  );
+}
+
+function isImage(doc: UploadedDocument): boolean {
+  const name = doc.filename.toLowerCase();
+  return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png");
+}
+
+function DocumentCard({ doc }: { doc: UploadedDocument }) {
+  const fileUrl = doc.url;
+  const pdf = isPdf(doc);
+  const image = isImage(doc);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all group">
+      {image ? (
+        <div className="h-24 bg-slate-50 border-b border-slate-100 overflow-hidden flex items-center justify-center">
+          <img
+            src={fileUrl}
+            alt={doc.filename}
+            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        </div>
+      ) : (
+        <div className={`h-24 flex items-center justify-center border-b border-slate-100 ${pdf ? "bg-red-50" : "bg-slate-50"}`}>
+          <FileText className={`w-10 h-10 ${pdf ? "text-red-400" : "text-slate-400"}`} />
+        </div>
+      )}
+
+      <div className="p-3">
+        <p className="font-mono text-xs font-bold text-slate-700 truncate mb-2" title={doc.filename}>
+          {doc.filename}
+        </p>
+        <div className="flex gap-2">
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-1 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg px-2 py-1.5 transition-colors"
+          >
+            <ExternalLink className="w-3 h-3" /> ખોલો
+          </a>
+          <a
+            href={fileUrl}
+            download={doc.filename}
+            className="flex-1 flex items-center justify-center gap-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg px-2 py-1.5 transition-colors"
+          >
+            <Download className="w-3 h-3" /> ડાઉનલોડ
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminRequests() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [selectedReq, setSelectedReq] = useState<any | null>(null);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const queryParams = statusFilter !== "all" ? { status: statusFilter } : undefined;
   const { data: requests, isLoading } = useListRequests(queryParams);
   const updateRequest = useUpdateRequest();
 
-  const filteredRequests = requests?.filter(req => 
-    req.fullName.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredRequests = requests?.filter(req =>
+    req.fullName.toLowerCase().includes(search.toLowerCase()) ||
     req.mobile.includes(search) ||
     req.id.toString() === search
   ) || [];
 
   const handleUpdateStatus = (newStatus: "pending" | "processing" | "completed" | "rejected") => {
     if (!selectedReq) return;
-    
+
     updateRequest.mutate(
       { id: selectedReq.id, data: { status: newStatus } },
       {
@@ -64,8 +134,8 @@ export default function AdminRequests() {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-8 flex flex-col sm:flex-row gap-6">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <Input 
-            placeholder="નામ, મોબાઈલ અથવા ID થી શોધો..." 
+          <Input
+            placeholder="નામ, મોબાઈલ અથવા ID થી શોધો..."
             className="pl-12 h-14 bg-slate-50 border-transparent rounded-xl text-lg focus-visible:ring-primary"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -94,6 +164,7 @@ export default function AdminRequests() {
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">ગ્રાહક</th>
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">સેવા</th>
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">શહેર</th>
+                <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">દસ્તાવેજ</th>
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">તારીખ</th>
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">સ્ટેટસ</th>
               </tr>
@@ -101,14 +172,14 @@ export default function AdminRequests() {
             <tbody className="divide-y divide-slate-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={7} className="px-8 py-20 text-center">
                     <Loader2 className="w-10 h-10 animate-spin mx-auto text-secondary mb-4" />
                     <p className="font-sans text-slate-500 font-medium">અરજીઓ લોડ થઈ રહી છે...</p>
                   </td>
                 </tr>
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-20 text-center">
+                  <td colSpan={7} className="px-8 py-20 text-center">
                     <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-10 h-10 text-slate-300" />
                     </div>
@@ -119,10 +190,11 @@ export default function AdminRequests() {
                 filteredRequests.map((req) => {
                   const statusInfo = statusMap[req.status as keyof typeof statusMap] || statusMap.pending;
                   const date = new Date(req.createdAt).toLocaleDateString('gu-IN');
-                  
+                  const docCount = (req as any).documents?.length ?? 0;
+
                   return (
-                    <tr 
-                      key={req.id} 
+                    <tr
+                      key={req.id}
                       className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
                       onClick={() => setSelectedReq(req)}
                     >
@@ -133,6 +205,15 @@ export default function AdminRequests() {
                       </td>
                       <td className="px-8 py-6 font-sans font-medium text-slate-700">{req.serviceType}</td>
                       <td className="px-8 py-6 font-sans text-slate-500">{req.city}</td>
+                      <td className="px-8 py-6">
+                        {docCount > 0 ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                            <FileText className="w-3 h-3" /> {docCount} ફાઇલ
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-sm">—</span>
+                        )}
+                      </td>
                       <td className="px-8 py-6 font-sans text-slate-500">{date}</td>
                       <td className="px-8 py-6">
                         <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-bold border ${statusInfo.badgeClass}`}>
@@ -141,7 +222,7 @@ export default function AdminRequests() {
                         </span>
                       </td>
                     </tr>
-                  )
+                  );
                 })
               )}
             </tbody>
@@ -157,7 +238,7 @@ export default function AdminRequests() {
                 <div className="absolute inset-0 bg-pattern-texture opacity-20"></div>
                 <div className="relative z-10">
                   <DialogTitle className="font-serif text-3xl flex items-center gap-4 mb-2">
-                    અરજી વિગતો 
+                    અરજી વિગતો
                     <span className="font-mono text-secondary text-2xl bg-white/10 px-3 py-1 rounded-lg border border-white/20">#{selectedReq.id}</span>
                   </DialogTitle>
                   <DialogDescription className="font-sans text-white/70 text-base">
@@ -195,28 +276,34 @@ export default function AdminRequests() {
                   </div>
                 )}
 
+                {/* Real Documents Section */}
                 <div>
                   <h3 className="font-serif text-xl font-bold text-primary mb-4 flex items-center gap-3">
                     <div className="bg-primary/10 p-2 rounded-lg text-primary">
                       <FileText className="w-5 h-5" />
                     </div>
                     અપલોડ કરેલા દસ્તાવેજો
+                    {selectedReq.documents?.length > 0 && (
+                      <span className="text-sm font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-lg">
+                        {selectedReq.documents.length} ફાઇલ
+                      </span>
+                    )}
                   </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {/* Mock documents */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-3 hover:border-primary/30 transition-colors cursor-pointer group shadow-sm">
-                      <div className="bg-red-50 w-12 h-12 rounded-full flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-                        <FileText className="w-6 h-6" />
+
+                  {!selectedReq.documents || selectedReq.documents.length === 0 ? (
+                    <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-10 text-center">
+                      <div className="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FileText className="w-8 h-8 text-slate-400" />
                       </div>
-                      <span className="font-mono text-xs font-bold text-slate-600 truncate w-full text-center">Aadhaar.pdf</span>
+                      <p className="font-sans text-slate-500 text-lg">કોઈ દસ્તાવેજ અપલોડ કરેલ નથી</p>
                     </div>
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col items-center justify-center gap-3 hover:border-primary/30 transition-colors cursor-pointer group shadow-sm">
-                      <div className="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                        <ImageIcon className="w-6 h-6" />
-                      </div>
-                      <span className="font-mono text-xs font-bold text-slate-600 truncate w-full text-center">Photo.jpg</span>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {selectedReq.documents.map((doc: UploadedDocument) => (
+                        <DocumentCard key={doc.id} doc={doc} />
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {selectedReq.transactionId && (
@@ -235,28 +322,28 @@ export default function AdminRequests() {
                 <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-md">
                   <h3 className="font-serif text-2xl font-bold text-primary mb-6">અરજીનું સ્ટેટસ અપડેટ કરો</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <Button 
+                    <Button
                       className={`h-14 font-bold text-base rounded-xl transition-all ${selectedReq.status === "pending" ? "bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg scale-105" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
                       onClick={() => handleUpdateStatus("pending")}
                       disabled={updateRequest.isPending}
                     >
                       પેન્ડિંગ
                     </Button>
-                    <Button 
+                    <Button
                       className={`h-14 font-bold text-base rounded-xl transition-all ${selectedReq.status === "processing" ? "bg-blue-500 hover:bg-blue-600 text-white shadow-lg scale-105" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
                       onClick={() => handleUpdateStatus("processing")}
                       disabled={updateRequest.isPending}
                     >
                       પ્રક્રિયામાં
                     </Button>
-                    <Button 
+                    <Button
                       className={`h-14 font-bold text-base rounded-xl transition-all ${selectedReq.status === "completed" ? "bg-green-500 hover:bg-green-600 text-white shadow-lg scale-105" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
                       onClick={() => handleUpdateStatus("completed")}
                       disabled={updateRequest.isPending}
                     >
                       પૂર્ણ
                     </Button>
-                    <Button 
+                    <Button
                       className={`h-14 font-bold text-base rounded-xl transition-all ${selectedReq.status === "rejected" ? "bg-red-500 hover:bg-red-600 text-white shadow-lg scale-105" : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"}`}
                       onClick={() => handleUpdateStatus("rejected")}
                       disabled={updateRequest.isPending}

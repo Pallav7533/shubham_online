@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { UploadCloud, FileText, CheckCircle2, QrCode, IndianRupee, ShieldCheck, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { UploadCloud, FileText, CheckCircle2, QrCode, IndianRupee, ShieldCheck, Loader2, X, File } from "lucide-react";
 import { Link } from "wouter";
 
 const serviceOptions = [
@@ -21,6 +22,9 @@ const serviceOptions = [
   "PAN કાર્ડ", "પાસપોર્ટ સહાય", "આવકનો દાખલો", "જાતિનો દાખલો", "EWS પ્રમાણપત્ર", "આધાર અપડેટ",
   "GPSC ફોર્મ", "GSSSB ફોર્મ", "પોલીસ ભરતી", "રેલવે ભરતી", "બેન્ક ભરતી"
 ];
+
+const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+const MAX_SIZE_MB = 10;
 
 const formSchema = z.object({
   fullName: z.string().min(2, "પૂરું નામ દાખલ કરો"),
@@ -33,6 +37,49 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+interface DocSlot {
+  docType: string;
+  label: string;
+  accept: string;
+  file: File | null;
+  error: string;
+}
+
+async function uploadFileToServer(
+  file: File,
+  requestId: number,
+  docType: string,
+  onProgress: (pct: number) => void
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("requestId", String(requestId));
+    formData.append("docType", docType);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "/api/requests/upload");
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    });
+
+    xhr.onload = () => {
+      if (xhr.status === 201) {
+        onProgress(100);
+        resolve();
+      } else {
+        reject(new Error(`Upload failed: ${xhr.responseText}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.send(formData);
+  });
+}
+
 export default function Apply() {
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
@@ -41,6 +88,20 @@ export default function Apply() {
 
   const [transactionId, setTransactionId] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [paymentSsFile, setPaymentSsFile] = useState<File | null>(null);
+  const [paymentSsError, setPaymentSsError] = useState("");
+  const paymentSsRef = useRef<HTMLInputElement | null>(null);
+
+  const [docSlots, setDocSlots] = useState<DocSlot[]>([
+    { docType: "aadhaar", label: "આધાર કાર્ડ", accept: ".pdf,.jpg,.jpeg,.png", file: null, error: "" },
+    { docType: "photo", label: "પાસપોર્ટ સાઇઝ ફોટો", accept: ".jpg,.jpeg,.png", file: null, error: "" },
+    { docType: "signature", label: "સહી (Signature)", accept: ".jpg,.jpeg,.png", file: null, error: "" },
+    { docType: "marksheet", label: "માર્કશીટ/અન્ય દસ્તાવેજ", accept: ".pdf,.jpg,.jpeg,.png", file: null, error: "" },
+  ]);
+
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const createRequest = useCreateRequest();
   const updatePayment = useUpdatePayment();
@@ -48,46 +109,96 @@ export default function Apply() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
-      mobile: "",
-      email: "",
-      city: "",
-      serviceType: defaultService,
-      notes: "",
+      fullName: "", mobile: "", email: "", city: "",
+      serviceType: defaultService, notes: "",
     },
   });
 
-  const isPending = createRequest.isPending || updatePayment.isPending;
+  const handleFileSelect = (index: number, files: FileList | null) => {
+    const file = files?.[0] ?? null;
+    const slot = docSlots[index];
+    let error = "";
 
-  const onSubmit = (data: FormValues) => {
+    if (file) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        error = "ફક્ત PDF, JPG, PNG ફાઇલ માન્ય છે";
+        if (fileInputRefs.current[index]) fileInputRefs.current[index]!.value = "";
+      } else if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        error = `ફાઇલ ${MAX_SIZE_MB}MB થી મોટી ન હોવી જોઈએ`;
+        if (fileInputRefs.current[index]) fileInputRefs.current[index]!.value = "";
+      }
+    }
+
+    const updated = [...docSlots];
+    updated[index] = { ...slot, file: error ? null : file, error };
+    setDocSlots(updated);
+  };
+
+  const removeFile = (index: number) => {
+    const updated = [...docSlots];
+    updated[index] = { ...updated[index], file: null, error: "" };
+    setDocSlots(updated);
+    if (fileInputRefs.current[index]) fileInputRefs.current[index]!.value = "";
+  };
+
+  const selectedFiles = docSlots.filter((s) => s.file !== null);
+
+  const onSubmit = async (data: FormValues) => {
     if (!transactionId.trim()) {
       toast({ title: "ભૂલ", description: "ચુકવણી કર્યા પછી ટ્રાન્ઝેક્શન ID દાખલ કરો", variant: "destructive" });
       return;
     }
+    if (!paymentSsFile) {
+      toast({ title: "ભૂલ", description: "ચુકવણીનો સ્ક્રીનશૉટ અપલોડ કરવો ફરજિયાત છે", variant: "destructive" });
+      return;
+    }
 
-    createRequest.mutate(
-      { data },
-      {
-        onSuccess: (response) => {
-          updatePayment.mutate(
-            { id: response.id, data: { transactionId, paymentScreenshot: "uploaded.png" } },
-            {
-              onSuccess: () => {
-                setIsSuccess(true);
-                toast({ title: "અરજી સફળતાપૂર્વક સબમિટ થઈ!", description: `અરજી નંબર: #${response.id}` });
-              },
-              onError: () => {
-                toast({ title: "ભૂલ", description: "ચુકવણી નોંધવામાં ભૂલ. ફરી પ્રયાસ કરો.", variant: "destructive" });
-              }
-            }
-          );
-        },
-        onError: () => {
-          toast({ title: "ભૂલ", description: "અરજી નોંધવામાં નિષ્ફળતા. કૃપા કરીને ફરી પ્રયાસ કરો.", variant: "destructive" });
-        }
+    try {
+      setIsUploading(true);
+
+      const response = await new Promise<{ id: number }>((resolve, reject) => {
+        createRequest.mutate({ data }, {
+          onSuccess: (res) => resolve(res as { id: number }),
+          onError: reject,
+        });
+      });
+
+      const requestId = response.id;
+
+      for (const slot of docSlots) {
+        if (!slot.file) continue;
+        setUploadProgress((prev) => ({ ...prev, [slot.docType]: 0 }));
+        await uploadFileToServer(slot.file, requestId, slot.docType, (pct) => {
+          setUploadProgress((prev) => ({ ...prev, [slot.docType]: pct }));
+        });
       }
-    );
+
+      let paymentSsFilename = "";
+      if (paymentSsFile) {
+        setUploadProgress((prev) => ({ ...prev, payment_screenshot: 0 }));
+        await uploadFileToServer(paymentSsFile, requestId, "payment_screenshot", (pct) => {
+          setUploadProgress((prev) => ({ ...prev, payment_screenshot: pct }));
+        });
+        paymentSsFilename = paymentSsFile.name;
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        updatePayment.mutate(
+          { id: requestId, data: { transactionId, paymentScreenshot: paymentSsFilename || transactionId } },
+          { onSuccess: () => resolve(), onError: reject }
+        );
+      });
+
+      setIsSuccess(true);
+      toast({ title: "અરજી સફળતાપૂર્વક સબમિટ થઈ!", description: `અરજી નંબર: #${requestId}` });
+    } catch {
+      toast({ title: "ભૂલ", description: "અરજી સબમિટ કરવામાં ભૂલ. ફરી પ્રયાસ કરો.", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+    }
   };
+
+  const isPending = createRequest.isPending || updatePayment.isPending || isUploading;
 
   if (isSuccess) {
     return (
@@ -115,7 +226,6 @@ export default function Apply() {
 
   return (
     <ClientLayout>
-      {/* Header */}
       <div className="bg-primary text-white pt-32 pb-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-pattern-texture opacity-20"></div>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -144,109 +254,85 @@ export default function Apply() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
 
-                  {/* Step 1: Personal Details */}
+                  {/* Step 1 */}
                   <div>
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm">1</div>
                       <h3 className="font-serif text-xl font-bold text-primary">વ્યક્તિગત માહિતી</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <FormField
-                        control={form.control}
-                        name="fullName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-sans text-base font-bold text-primary">પૂરું નામ <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input placeholder="દા.ત. રમેશભાઈ પટેલ" {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
-                            </FormControl>
-                            <FormMessage className="font-sans" />
-                          </FormItem>
-                        )}
-                      />
+                      <FormField control={form.control} name="fullName" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-sans text-base font-bold text-primary">પૂરું નામ <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="દા.ત. રમેશભાઈ પટેલ" {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
+                          </FormControl>
+                          <FormMessage className="font-sans" />
+                        </FormItem>
+                      )} />
 
-                      <FormField
-                        control={form.control}
-                        name="mobile"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-sans text-base font-bold text-primary">મોબાઈલ નંબર <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input placeholder="10 આંકડાનો નંબર" maxLength={10} {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
-                            </FormControl>
-                            <FormMessage className="font-sans" />
-                          </FormItem>
-                        )}
-                      />
+                      <FormField control={form.control} name="mobile" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-sans text-base font-bold text-primary">મોબાઈલ નંબર <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="10 આંકડાનો નંબર" maxLength={10} {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
+                          </FormControl>
+                          <FormMessage className="font-sans" />
+                        </FormItem>
+                      )} />
 
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-sans text-base font-bold text-primary">ઈમેલ (વૈકલ્પિક)</FormLabel>
-                            <FormControl>
-                              <Input placeholder="દા.ત. ramesh@gmail.com" type="email" {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
-                            </FormControl>
-                            <FormMessage className="font-sans" />
-                          </FormItem>
-                        )}
-                      />
+                      <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-sans text-base font-bold text-primary">ઈમેલ (વૈકલ્પિક)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="દા.ત. ramesh@gmail.com" type="email" {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
+                          </FormControl>
+                          <FormMessage className="font-sans" />
+                        </FormItem>
+                      )} />
 
-                      <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-sans text-base font-bold text-primary">શહેર/ગામ <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <Input placeholder="દા.ત. રાજકોટ" {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
-                            </FormControl>
-                            <FormMessage className="font-sans" />
-                          </FormItem>
-                        )}
-                      />
+                      <FormField control={form.control} name="city" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-sans text-base font-bold text-primary">શહેર/ગામ <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="દા.ત. રાજકોટ" {...field} className="h-14 text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary" />
+                          </FormControl>
+                          <FormMessage className="font-sans" />
+                        </FormItem>
+                      )} />
 
-                      <FormField
-                        control={form.control}
-                        name="serviceType"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel className="font-sans text-base font-bold text-primary">સેવાનો પ્રકાર <span className="text-red-500">*</span></FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="h-14 text-lg rounded-xl border-slate-200 focus:ring-secondary focus:border-secondary">
-                                  <SelectValue placeholder="સેવા પસંદ કરો" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="max-h-80">
-                                {serviceOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt} className="text-base py-3 cursor-pointer">{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage className="font-sans" />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem className="md:col-span-2">
-                            <FormLabel className="font-sans text-base font-bold text-primary">વધારાની નોંધ (વૈકલ્પિક)</FormLabel>
+                      <FormField control={form.control} name="serviceType" render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="font-sans text-base font-bold text-primary">સેવાનો પ્રકાર <span className="text-red-500">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <Textarea
-                                placeholder="અહીં કોઈપણ વિશેષ સૂચના લખી શકો છો..."
-                                className="min-h-[100px] resize-y text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary p-4"
-                                {...field}
-                              />
+                              <SelectTrigger className="h-14 text-lg rounded-xl border-slate-200 focus:ring-secondary focus:border-secondary">
+                                <SelectValue placeholder="સેવા પસંદ કરો" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage className="font-sans" />
-                          </FormItem>
-                        )}
-                      />
+                            <SelectContent className="max-h-80">
+                              {serviceOptions.map(opt => (
+                                <SelectItem key={opt} value={opt} className="text-base py-3 cursor-pointer">{opt}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="font-sans" />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={form.control} name="notes" render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="font-sans text-base font-bold text-primary">વધારાની નોંધ (વૈકલ્પિક)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="અહીં કોઈપણ વિશેષ સૂચના લખી શકો છો..."
+                              className="min-h-[100px] resize-y text-lg rounded-xl border-slate-200 focus-visible:ring-secondary focus-visible:border-secondary p-4"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="font-sans" />
+                        </FormItem>
+                      )} />
                     </div>
                   </div>
 
@@ -258,35 +344,71 @@ export default function Apply() {
                     </div>
                     <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
-                          <label className="font-sans text-base font-bold text-primary block mb-3 flex items-center gap-2">
-                            <UploadCloud className="w-4 h-4" /> આધાર કાર્ડ
-                          </label>
-                          <Input type="file" accept=".pdf,.jpg,.jpeg,.png" className="file:bg-primary file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1.5 file:mr-3 file:font-medium cursor-pointer h-auto py-2 px-2 w-full text-sm bg-slate-50" />
-                          <p className="font-sans text-xs text-slate-500 mt-2">PDF અથવા ઇમેજ (મેક્સ. 10MB)</p>
-                        </div>
-                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
-                          <label className="font-sans text-base font-bold text-primary block mb-3 flex items-center gap-2">
-                            <UploadCloud className="w-4 h-4" /> પાસપોર્ટ સાઇઝ ફોટો
-                          </label>
-                          <Input type="file" accept=".jpg,.jpeg,.png" className="file:bg-primary file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1.5 file:mr-3 file:font-medium cursor-pointer h-auto py-2 px-2 w-full text-sm bg-slate-50" />
-                          <p className="font-sans text-xs text-slate-500 mt-2">JPG અથવા PNG (મેક્સ. 10MB)</p>
-                        </div>
-                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
-                          <label className="font-sans text-base font-bold text-primary block mb-3 flex items-center gap-2">
-                            <UploadCloud className="w-4 h-4" /> સહી (Signature)
-                          </label>
-                          <Input type="file" accept=".jpg,.jpeg,.png" className="file:bg-primary file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1.5 file:mr-3 file:font-medium cursor-pointer h-auto py-2 px-2 w-full text-sm bg-slate-50" />
-                          <p className="font-sans text-xs text-slate-500 mt-2">JPG અથવા PNG (મેક્સ. 10MB)</p>
-                        </div>
-                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-primary/30 transition-all">
-                          <label className="font-sans text-base font-bold text-primary block mb-3 flex items-center gap-2">
-                            <UploadCloud className="w-4 h-4" /> માર્કશીટ/અન્ય દસ્તાવેજ
-                          </label>
-                          <Input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple className="file:bg-primary file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1.5 file:mr-3 file:font-medium cursor-pointer h-auto py-2 px-2 w-full text-sm bg-slate-50" />
-                          <p className="font-sans text-xs text-slate-500 mt-2">PDF અથવા ઇમેજ (મેક્સ. 10MB)</p>
-                        </div>
+                        {docSlots.map((slot, index) => (
+                          <div
+                            key={slot.docType}
+                            className={`bg-white p-5 rounded-xl border shadow-sm transition-all ${
+                              slot.file
+                                ? "border-green-300 bg-green-50/30"
+                                : slot.error
+                                ? "border-red-300"
+                                : "border-slate-200 hover:border-primary/30"
+                            }`}
+                          >
+                            <label className="font-sans text-base font-bold text-primary block mb-3 flex items-center gap-2">
+                              <UploadCloud className="w-4 h-4" /> {slot.label}
+                            </label>
+
+                            {slot.file ? (
+                              <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                                <File className="w-4 h-4 text-green-600 shrink-0" />
+                                <span className="text-sm font-medium text-green-800 truncate flex-1">{slot.file.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeFile(index)}
+                                  className="text-green-600 hover:text-red-500 transition-colors shrink-0"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <input
+                                ref={(el) => { fileInputRefs.current[index] = el; }}
+                                type="file"
+                                accept={slot.accept}
+                                onChange={(e) => handleFileSelect(index, e.target.files)}
+                                className="file:bg-primary file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1.5 file:mr-3 file:font-medium cursor-pointer h-auto py-2 px-2 w-full text-sm bg-slate-50 rounded-lg border border-slate-200"
+                              />
+                            )}
+
+                            {slot.error && (
+                              <p className="font-sans text-xs text-red-600 mt-2">{slot.error}</p>
+                            )}
+
+                            {uploadProgress[slot.docType] !== undefined && (
+                              <div className="mt-3">
+                                <Progress value={uploadProgress[slot.docType]} className="h-1.5" />
+                                <p className="text-xs text-slate-500 mt-1 text-right">{uploadProgress[slot.docType]}%</p>
+                              </div>
+                            )}
+
+                            {!slot.file && !slot.error && (
+                              <p className="font-sans text-xs text-slate-500 mt-2">
+                                {slot.accept.includes("pdf") ? "PDF અથવા ઇમેજ" : "JPG અથવા PNG"} (મેક્સ. {MAX_SIZE_MB}MB)
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
+
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-4 bg-green-50 border border-green-200 rounded-xl px-5 py-3 flex items-center gap-3">
+                          <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+                          <p className="font-sans text-sm text-green-800 font-medium">
+                            {selectedFiles.length} ફાઇલ(ઓ) અપલોડ માટે તૈયાર — સબમિટ કરતી વખતે અપલોડ થશે
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -299,7 +421,6 @@ export default function Apply() {
                     </div>
 
                     <div className="bg-primary rounded-2xl overflow-hidden">
-                      {/* QR Section */}
                       <div className="p-8 text-center text-white relative">
                         <div className="absolute inset-0 bg-pattern-texture opacity-20"></div>
                         <div className="relative z-10">
@@ -311,7 +432,6 @@ export default function Apply() {
                         </div>
                       </div>
 
-                      {/* Payment Form */}
                       <div className="bg-white p-8 space-y-6">
                         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 items-start">
                           <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -339,15 +459,68 @@ export default function Apply() {
                           )}
                         </div>
 
-                        <div className="space-y-2">
-                          <Label className="font-sans text-base font-bold text-primary block">
-                            પેમેન્ટ સ્ક્રીનશોટ (વૈકલ્પિક)
+                        {/* Payment Screenshot Upload */}
+                        <div className="space-y-2 border-t border-slate-100 pt-6">
+                          <Label className="font-sans text-base font-bold text-primary block flex items-center gap-2">
+                            <UploadCloud className="w-4 h-4" />
+                            ચુકવણીનો સ્ક્રીનશૉટ અપલોડ કરો
+                            <span className="text-red-500 font-normal text-sm">*</span>
                           </Label>
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            className="file:bg-primary file:text-white file:border-0 file:rounded-lg file:px-4 file:py-2 file:mr-4 file:font-medium cursor-pointer h-auto py-3 px-3 w-full text-base bg-slate-50 rounded-xl"
-                          />
+
+                          {paymentSsFile ? (
+                            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                              <File className="w-5 h-5 text-green-600 shrink-0" />
+                              <span className="text-sm font-medium text-green-800 truncate flex-1">{paymentSsFile.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPaymentSsFile(null);
+                                  setPaymentSsError("");
+                                  if (paymentSsRef.current) paymentSsRef.current.value = "";
+                                }}
+                                className="text-green-600 hover:text-red-500 transition-colors shrink-0"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <input
+                              ref={paymentSsRef}
+                              type="file"
+                              accept=".jpg,.jpeg,.png,.pdf"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] ?? null;
+                                setPaymentSsError("");
+                                if (file) {
+                                  if (!ALLOWED_TYPES.includes(file.type)) {
+                                    setPaymentSsError("ફક્ત JPG, PNG, PDF ફાઇલ માન્ય છે");
+                                    e.target.value = "";
+                                  } else if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+                                    setPaymentSsError(`ફાઇલ ${MAX_SIZE_MB}MB થી મોટી ન હોવી જોઈએ`);
+                                    e.target.value = "";
+                                  } else {
+                                    setPaymentSsFile(file);
+                                  }
+                                }
+                              }}
+                              className="file:bg-secondary file:text-primary file:border-0 file:rounded-lg file:px-3 file:py-1.5 file:mr-3 file:font-bold cursor-pointer h-auto py-3 px-3 w-full text-sm bg-amber-50 rounded-xl border border-amber-200 hover:border-secondary transition-colors"
+                            />
+                          )}
+
+                          {paymentSsError && (
+                            <p className="font-sans text-xs text-red-600">{paymentSsError}</p>
+                          )}
+
+                          {uploadProgress["payment_screenshot"] !== undefined && (
+                            <div className="mt-2">
+                              <Progress value={uploadProgress["payment_screenshot"]} className="h-1.5" />
+                              <p className="text-xs text-slate-500 mt-1 text-right">{uploadProgress["payment_screenshot"]}%</p>
+                            </div>
+                          )}
+
+                          <p className="font-sans text-xs text-slate-500">
+                            Google Pay / PhonePe / Paytm ચુકવણી પછીનો સ્ક્રીનશૉટ અહીં અપલોડ કરો — admin ને ઝડપી ચકાસણી કરવામાં મદદ મળે છે.
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -363,7 +536,10 @@ export default function Apply() {
                       data-testid="button-submit"
                     >
                       {isPending ? (
-                        <><Loader2 className="mr-3 h-6 w-6 animate-spin" /> પ્રક્રિયા ચાલુ છે...</>
+                        <>
+                          <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                          {isUploading ? "દસ્તાવેજ અપલોડ થઈ રહ્યા છે..." : "પ્રક્રિયા ચાલુ છે..."}
+                        </>
                       ) : (
                         <>અરજી સબમિટ કરો</>
                       )}

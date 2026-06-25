@@ -61,11 +61,7 @@ router.get("/admin/stats", async (_req, res): Promise<void> => {
     .where(sql`${serviceRequestsTable.createdAt} >= ${todayStart}`);
 
   const stats = {
-    total: 0,
-    pending: 0,
-    processing: 0,
-    completed: 0,
-    rejected: 0,
+    total: 0, pending: 0, processing: 0, completed: 0, rejected: 0,
     today: todayRows[0]?.count ?? 0,
   };
 

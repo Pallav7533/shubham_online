@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { eq, and, like, gte, sql } from "drizzle-orm";
+import { eq, and, like, gte } from "drizzle-orm";
 import { db, serviceRequestsTable, documentsTable } from "@workspace/db";
 import {
   ListRequestsQueryParams,

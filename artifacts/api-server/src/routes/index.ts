@@ -1,14 +1,14 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import requestsRouter from "./requests";
-import adminRouter from "./admin";
-import uploadsRouter from "./uploads";
+import adminRouter from "./admin";        // ⬅️ NAV
+import uploadsRouter from "./uploads";   // ⬅️ NAV
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(requestsRouter);
-router.use(adminRouter);
-router.use(uploadsRouter);
+router.use(adminRouter);    // ⬅️ NAV
+router.use(uploadsRouter);  // ⬅️ NAV
 
 export default router;
