@@ -1,15 +1,15 @@
 {
-    "buildCommand": "pnpm install && pnpm --filter @workspace/api-spec run codegen && pnpm --filter @workspace/shubham-online run build",
-    "outputDirectory": "artifacts/shubham-online/dist",
-    "installCommand": "pnpm install",
-    "rewrites": [
-      {
-        "source": "/api/:path*",
-        "destination": "https://shubham-online.onrender.com/api/:path*"
-      },
-      {
-        "source": "/(.*)",
-        "destination": "/index.html"
-      }
-    ]
-  }
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm --filter @workspace/shubham-online run build",
+  "outputDirectory": "artifacts/shubham-online/dist/public",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://shubham-online.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
