@@ -2,13 +2,12 @@ import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, serviceRequestsTable } from "@workspace/db";
 import { AdminLoginBody } from "@workspace/api-zod";
+import { adminSessions } from "../lib/admin-sessions";
 
 const router: IRouter = Router();
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "shubham2024";
-
-const adminSessions = new Set<string>();
 
 router.post("/admin/login", async (req, res): Promise<void> => {
   const parsed = AdminLoginBody.safeParse(req.body);
@@ -61,7 +60,11 @@ router.get("/admin/stats", async (_req, res): Promise<void> => {
     .where(sql`${serviceRequestsTable.createdAt} >= ${todayStart}`);
 
   const stats = {
-    total: 0, pending: 0, processing: 0, completed: 0, rejected: 0,
+    total: 0,
+    pending: 0,
+    processing: 0,
+    completed: 0,
+    rejected: 0,
     today: todayRows[0]?.count ?? 0,
   };
 

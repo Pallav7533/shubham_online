@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FileText, Users, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, Users, LogOut, Megaphone } from "lucide-react";
 import { useAdminLogout } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,7 @@ const sidebarLinks = [
   { href: "/admin/dashboard", label: "ડેશબોર્ડ", icon: LayoutDashboard },
   { href: "/admin/requests", label: "અરજીઓ", icon: FileText },
   { href: "/admin/customers", label: "ગ્રાહકો", icon: Users },
+  { href: "/admin/ads", label: "જાહેરાત", icon: Megaphone },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -50,8 +51,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={link.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium",
-                  isActive 
-                    ? "bg-primary/20 text-primary" 
+                  isActive
+                    ? "bg-primary/20 text-primary"
                     : "text-slate-400 hover:text-white hover:bg-slate-800"
                 )}
               >
@@ -85,7 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </header>
         <div className="md:hidden bg-slate-800 p-2 flex overflow-x-auto gap-2">
-           {sidebarLinks.map((link) => {
+          {sidebarLinks.map((link) => {
             const isActive = location === link.href;
             return (
               <Link

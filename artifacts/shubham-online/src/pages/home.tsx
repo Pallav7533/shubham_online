@@ -1,15 +1,75 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
 import { 
   ArrowRight,
   CheckCircle2,
   Users,
   Award,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  Megaphone
 } from "lucide-react";
 import ClientLayout from "@/components/layout/ClientLayout";
+
+interface Ad {
+  id: number;
+  imageUrl: string;
+  title: string;
+  description: string | null;
+}
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+function AdsSection() {
+  const { data: ads } = useQuery<Ad[]>({
+    queryKey: ["ads"],
+    queryFn: async () => {
+      const res = await fetch(`${BASE}/api/ads`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  if (!ads || ads.length === 0) return null;
+
+  return (
+    <section className="py-20 bg-white relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-72 h-72 bg-secondary/5 rounded-full blur-3xl"></div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 text-secondary font-semibold text-sm mb-4">
+            <Megaphone className="w-4 h-4" /> જાહેરાત / જાણકારી
+          </div>
+          <h2 className="font-serif text-4xl font-bold text-primary">મહત્વની જાહેરાતો</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {ads.map((ad) => (
+            <div
+              key={ad.id}
+              className="group bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className="h-52 overflow-hidden bg-slate-50">
+                <img
+                  src={ad.imageUrl}
+                  alt={ad.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="font-serif text-xl font-bold text-primary mb-2">{ad.title}</h3>
+                {ad.description && (
+                  <p className="font-sans text-slate-500 text-sm leading-relaxed">{ad.description}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
@@ -159,6 +219,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <AdsSection />
 
       {/* Features/Why Us */}
       <section className="py-24 bg-primary text-white relative overflow-hidden">

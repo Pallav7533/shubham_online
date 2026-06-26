@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, FileText, Image as ImageIcon, CheckCircle2, Clock, RefreshCw, XCircle, Download, ExternalLink } from "lucide-react";
+import { Loader2, Search, FileText, Image as ImageIcon, CheckCircle2, Clock, RefreshCw, XCircle, Download, ExternalLink, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -207,19 +207,20 @@ export default function AdminRequests() {
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">દસ્તાવેજ</th>
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">તારીખ</th>
                 <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">સ્ટેટસ</th>
+                <th className="px-8 py-5 font-sans font-bold text-slate-400 uppercase tracking-wider text-xs">WhatsApp</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-20 text-center">
+                  <td colSpan={8} className="px-8 py-20 text-center">
                     <Loader2 className="w-10 h-10 animate-spin mx-auto text-secondary mb-4" />
                     <p className="font-sans text-slate-500 font-medium">અરજીઓ લોડ થઈ રહી છે...</p>
                   </td>
                 </tr>
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-8 py-20 text-center">
+                  <td colSpan={8} className="px-8 py-20 text-center">
                     <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <FileText className="w-10 h-10 text-slate-300" />
                     </div>
@@ -261,6 +262,18 @@ export default function AdminRequests() {
                           {statusInfo.label}
                         </span>
                       </td>
+                      <td className="px-8 py-6" onClick={(e) => e.stopPropagation()}>
+                        <a
+                          href={`https://wa.me/91${req.mobile.replace(/\D/g, "").replace(/^91/, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={`WhatsApp ${req.mobile}`}
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: "#25D366" }}
+                        >
+                          <MessageCircle className="w-4 h-4" /> WA
+                        </a>
+                      </td>
                     </tr>
                   );
                 })
@@ -295,7 +308,18 @@ export default function AdminRequests() {
                   </div>
                   <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                     <p className="font-sans text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">મોબાઈલ</p>
-                    <p className="font-mono text-xl font-bold text-primary">{selectedReq.mobile}</p>
+                    <div className="flex items-center gap-3">
+                      <p className="font-mono text-xl font-bold text-primary">{selectedReq.mobile}</p>
+                      <a
+                        href={`https://wa.me/91${selectedReq.mobile.replace(/\D/g, "").replace(/^91/, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-white hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: "#25D366" }}
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                      </a>
+                    </div>
                   </div>
                   <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                     <p className="font-sans text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">સેવા</p>
