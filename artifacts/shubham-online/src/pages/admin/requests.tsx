@@ -36,8 +36,27 @@ function isImage(doc: UploadedDocument): boolean {
   return name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png");
 }
 
+function getOpenUrl(url: string, filename: string): string {
+  if (
+    url.includes("/raw/upload/") &&
+    filename.toLowerCase().endsWith(".pdf") &&
+    !url.toLowerCase().endsWith(".pdf")
+  ) {
+    return url + ".pdf";
+  }
+  return url;
+}
+
+function getDownloadUrl(url: string, filename: string): string {
+  const safeFilename = filename
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9._-]/g, "");
+  return url.replace("/upload/", `/upload/fl_attachment:${safeFilename}/`);
+}
+
 function DocumentCard({ doc }: { doc: UploadedDocument }) {
-  const fileUrl = doc.url;
+  const openUrl = getOpenUrl(doc.url, doc.filename);
+  const downloadUrl = getDownloadUrl(doc.url, doc.filename);
   const pdf = isPdf(doc);
   const image = isImage(doc);
 
@@ -46,7 +65,7 @@ function DocumentCard({ doc }: { doc: UploadedDocument }) {
       {image ? (
         <div className="h-24 bg-slate-50 border-b border-slate-100 overflow-hidden flex items-center justify-center">
           <img
-            src={fileUrl}
+            src={openUrl}
             alt={doc.filename}
             className="h-full w-full object-cover group-hover:scale-105 transition-transform"
             onError={(e) => {
@@ -66,7 +85,7 @@ function DocumentCard({ doc }: { doc: UploadedDocument }) {
         </p>
         <div className="flex gap-2">
           <a
-            href={fileUrl}
+            href={openUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-1 text-xs font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-lg px-2 py-1.5 transition-colors"
@@ -74,8 +93,9 @@ function DocumentCard({ doc }: { doc: UploadedDocument }) {
             <ExternalLink className="w-3 h-3" /> ખોલો
           </a>
           <a
-            href={fileUrl}
-            download={doc.filename}
+            href={downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg px-2 py-1.5 transition-colors"
           >
             <Download className="w-3 h-3" /> ડાઉનલોડ
