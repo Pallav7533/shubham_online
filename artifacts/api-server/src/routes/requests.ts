@@ -1,8 +1,7 @@
 import { Router, type IRouter } from "express";
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { eq, and, like, gte, sql } from "drizzle-orm";
+import { v2 as cloudinary } from "cloudinary";
+import { eq, and, like, gte } from "drizzle-orm";
 import { db, serviceRequestsTable, documentsTable } from "@workspace/db";
 import {
   ListRequestsQueryParams,
@@ -17,26 +16,14 @@ import {
 
 const router: IRouter = Router();
 
-const workspaceRoot = process.cwd().endsWith(path.join("artifacts", "api-server"))
-  ? path.resolve(process.cwd(), "../..")
-  : process.cwd();
-
-const uploadsDir = path.resolve(workspaceRoot, "artifacts/api-server/uploads");
-
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    cb(null, `${unique}${path.extname(file.originalname)}`);
-  },
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
@@ -47,6 +34,31 @@ const upload = multer({
     }
   },
 });
+
+async function uploadToCloudinary(
+  buffer: Buffer,
+  originalname: string,
+  mimetype: string
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const resourceType = mimetype === "application/pdf" ? "raw" : "image";
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: "shubham-online",
+        resource_type: resourceType,
+        public_id: `${Date.now()}-${originalname.replace(/\.[^/.]+$/, "")}`,
+      },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error("Upload failed"));
+        } else {
+          resolve(result.secure_url);
+        }
+      }
+    );
+    uploadStream.end(buffer);
+  });
+}
 
 async function getRequestWithDocs(id: number) {
   const [request] = await db
@@ -139,13 +151,26 @@ router.post(
       return;
     }
 
+    let fileUrl: string;
+
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      fileUrl = await uploadToCloudinary(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+    } else {
+      res.status(500).json({ error: "File storage not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in .env" });
+      return;
+    }
+
     const [doc] = await db
       .insert(documentsTable)
       .values({
         requestId: parsed.data.requestId,
         docType: parsed.data.docType,
         filename: req.file.originalname,
-        url: `/api/uploads/${req.file.filename}`,
+        url: fileUrl,
       })
       .returning();
 
