@@ -37,35 +37,51 @@ function isImage(doc: UploadedDocument): boolean {
 }
 
 function getOpenUrl(url: string, filename: string): string {
-  if (
-    url.includes("/raw/upload/") &&
-    filename.toLowerCase().endsWith(".pdf") &&
-    !url.toLowerCase().endsWith(".pdf")
-  ) {
-    return url + ".pdf";
+  const isPdfFile =
+    filename.toLowerCase().endsWith(".pdf") ||
+    url.includes("/raw/upload/");
+  if (isPdfFile) {
+    return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}`;
   }
   return url;
 }
 
-function getDownloadUrl(url: string, filename: string): string {
-  const safeFilename = filename
-    .replace(/\s+/g, "_")
-    .replace(/[^a-zA-Z0-9._-]/g, "");
-  return url.replace("/upload/", `/upload/fl_attachment:${safeFilename}/`);
+async function downloadFile(url: string, filename: string): Promise<void> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("fetch failed");
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(url, "_blank");
+  }
 }
 
 function DocumentCard({ doc }: { doc: UploadedDocument }) {
+  const [downloading, setDownloading] = useState(false);
   const openUrl = getOpenUrl(doc.url, doc.filename);
-  const downloadUrl = getDownloadUrl(doc.url, doc.filename);
   const pdf = isPdf(doc);
   const image = isImage(doc);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    await downloadFile(doc.url, doc.filename);
+    setDownloading(false);
+  };
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all group">
       {image ? (
         <div className="h-24 bg-slate-50 border-b border-slate-100 overflow-hidden flex items-center justify-center">
           <img
-            src={openUrl}
+            src={doc.url}
             alt={doc.filename}
             className="h-full w-full object-cover group-hover:scale-105 transition-transform"
             onError={(e) => {
@@ -92,14 +108,18 @@ function DocumentCard({ doc }: { doc: UploadedDocument }) {
           >
             <ExternalLink className="w-3 h-3" /> ખોલો
           </a>
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg px-2 py-1.5 transition-colors"
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="flex-1 flex items-center justify-center gap-1 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg px-2 py-1.5 transition-colors disabled:opacity-50"
           >
-            <Download className="w-3 h-3" /> ડાઉનલોડ
-          </a>
+            {downloading ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Download className="w-3 h-3" />
+            )}
+            {downloading ? "..." : "ડાઉનલોડ"}
+          </button>
         </div>
       </div>
     </div>
