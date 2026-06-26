@@ -41,12 +41,21 @@ async function uploadToCloudinary(
   mimetype: string
 ): Promise<string> {
   return new Promise((resolve, reject) => {
-    const resourceType = mimetype === "application/pdf" ? "raw" : "image";
+    const isPdf = mimetype === "application/pdf";
+    const resourceType = isPdf ? "raw" : "image";
+    const ext = originalname.split(".").pop()?.toLowerCase() ?? "";
+    const safeName = originalname
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "_");
+    const publicId = isPdf
+      ? `${Date.now()}-${safeName}.${ext}`
+      : `${Date.now()}-${safeName}`;
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "shubham-online",
         resource_type: resourceType,
-        public_id: `${Date.now()}-${originalname.replace(/\.[^/.]+$/, "")}`,
+        public_id: publicId,
       },
       (error, result) => {
         if (error || !result) {
