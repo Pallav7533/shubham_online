@@ -169,7 +169,7 @@ export default function AdminAds() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ads.map((ad) => (
+            {ads.map((ad: Ad) => (
               <div key={ad.id} className="border border-slate-100 rounded-2xl overflow-hidden shadow-sm group">
                 <div className="h-44 overflow-hidden bg-slate-50">
                   <img

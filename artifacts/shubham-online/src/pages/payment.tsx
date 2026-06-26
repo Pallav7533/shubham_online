@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { useUpdatePayment, useGetRequest } from "@workspace/api-client-react";
+import { useUpdatePayment, useGetRequest, getGetRequestQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import ClientLayout from "@/components/layout/ClientLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,6 +23,7 @@ export default function Payment() {
   // Guard against invalid/missing ID
   const { data: requestData, isLoading } = useGetRequest(requestId, {
     query: {
+      queryKey: getGetRequestQueryKey(requestId),
       enabled: !!requestId && !isNaN(requestId),
     }
   });
