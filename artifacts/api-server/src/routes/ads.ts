@@ -51,7 +51,11 @@ async function saveImage(file: Express.Multer.File): Promise<string> {
         .replace(/\.[^/.]+$/, "")
         .replace(/[^a-zA-Z0-9_-]/g, "_");
       const stream = cloudinary.uploader.upload_stream(
-        { folder: "shubham-online/ads", resource_type: "image", public_id: `${Date.now()}-${safeName}` },
+        {
+          folder: "shubham-online/ads",
+          resource_type: "image",
+          public_id: `${Date.now()}-${safeName}`,
+        },
         (err, result) => {
           if (err || !result) reject(err ?? new Error("Upload failed"));
           else resolve(result.secure_url);
@@ -61,14 +65,20 @@ async function saveImage(file: Express.Multer.File): Promise<string> {
     });
   }
 
-  const ext = file.mimetype === "image/png" ? ".png" :
-               file.mimetype === "image/webp" ? ".webp" : ".jpg";
+  // Cloudinary nahi he to local disk pe save karo
+  const ext =
+    file.mimetype === "image/png"
+      ? ".png"
+      : file.mimetype === "image/webp"
+      ? ".webp"
+      : ".jpg";
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
   const dest = path.join(UPLOADS_DIR, filename);
   fs.writeFileSync(dest, file.buffer);
   return `/api/uploads/ads/${filename}`;
 }
 
+// GET /api/ads
 router.get("/ads", async (_req, res): Promise<void> => {
   const ads = await db
     .select()
@@ -77,6 +87,7 @@ router.get("/ads", async (_req, res): Promise<void> => {
   res.json(ads);
 });
 
+// POST /api/ads — admin panel se upload
 router.post(
   "/ads",
   requireAdmin,
@@ -96,18 +107,30 @@ router.post(
 
     const [ad] = await db
       .insert(advertisementsTable)
-      .values({ imageUrl, title: title.trim(), description: description?.trim() ?? null })
+      .values({
+        imageUrl,
+        title: title.trim(),
+        description: description?.trim() ?? null,
+      })
       .returning();
 
     res.status(201).json(ad);
   }
 );
 
+// DELETE /api/ads/:id
 router.delete("/ads/:id", requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(req.params.id, 10);
-  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid id" });
+    return;
+  }
 
-  const [ad] = await db.select().from(advertisementsTable).where(eq(advertisementsTable.id, id));
+  const [ad] = await db
+    .select()
+    .from(advertisementsTable)
+    .where(eq(advertisementsTable.id, id));
+
   if (ad?.imageUrl?.startsWith("/api/uploads/ads/")) {
     const filename = path.basename(ad.imageUrl);
     const filePath = path.join(UPLOADS_DIR, filename);
