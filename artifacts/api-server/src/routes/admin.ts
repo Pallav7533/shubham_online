@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, serviceRequestsTable } from "@workspace/db";
 import { AdminLoginBody } from "@workspace/api-zod";
-import { adminSessions } from "../lib/admin-sessions";
+import { signAdminToken } from "../lib/admin-sessions";
 
 const router: IRouter = Router();
 
@@ -24,20 +24,17 @@ router.post("/admin/login", async (req, res): Promise<void> => {
     return;
   }
 
-  const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  adminSessions.add(token);
+  const token = signAdminToken();
   res.cookie("admin_token", token, {
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     sameSite: "lax",
   });
 
   res.json({ success: true, message: "Login successful", token });
 });
 
-router.post("/admin/logout", async (req, res): Promise<void> => {
-  const token = req.cookies?.admin_token;
-  if (token) adminSessions.delete(token);
+router.post("/admin/logout", async (_req, res): Promise<void> => {
   res.clearCookie("admin_token");
   res.json({ success: true, message: "Logged out" });
 });

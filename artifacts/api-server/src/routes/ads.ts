@@ -5,7 +5,7 @@ import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { eq } from "drizzle-orm";
 import { db, advertisementsTable } from "@workspace/db";
-import { adminSessions } from "../lib/admin-sessions";
+import { verifyAdminToken } from "../lib/admin-sessions";
 
 const router: IRouter = Router();
 
@@ -39,8 +39,8 @@ function requireAdmin(req: any, res: any, next: any) {
   const token =
     req.cookies?.admin_token ||
     req.headers["x-admin-token"] ||
-    (req.headers["authorization"] || "").replace("Bearer ", "");
-  if (!token || !adminSessions.has(token)) {
+    (String(req.headers["authorization"] ?? "")).replace("Bearer ", "");
+  if (!token || !verifyAdminToken(token)) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
