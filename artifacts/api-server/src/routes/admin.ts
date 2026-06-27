@@ -32,7 +32,7 @@ router.post("/admin/login", async (req, res): Promise<void> => {
     sameSite: "lax",
   });
 
-  res.json({ success: true, message: "Login successful" });
+  res.json({ success: true, message: "Login successful", token });
 });
 
 router.post("/admin/logout", async (req, res): Promise<void> => {

@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => {
+        sessionStorage.removeItem("admin_token");
         toast({ title: "લોગઆઉટ સફળ", description: "તમે સફળતાપૂર્વક લોગઆઉટ કર્યું છે." });
         setLocation("/admin");
       },

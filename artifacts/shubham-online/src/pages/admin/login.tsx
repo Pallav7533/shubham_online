@@ -33,7 +33,8 @@ export default function AdminLogin() {
     login.mutate(
       { data },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
+          if (data?.token) sessionStorage.setItem("admin_token", data.token);
           toast({ title: "સ્વાગત છે!", description: "તમે સફળતાપૂર્વક લોગીન કર્યું છે." });
           setLocation("/admin/dashboard");
         },
