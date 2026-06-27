@@ -15,6 +15,9 @@ interface Ad {
 }
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+// For POST/DELETE: go directly to Render (Vercel can't proxy multipart uploads)
+const API_BASE = ((import.meta.env.VITE_API_URL as string | undefined) ?? "").replace(/\/$/, "") || BASE;
+
 const adminHeaders = (): Record<string, string> => {
   const token = sessionStorage.getItem("admin_token");
   return token ? { "x-admin-token": token } : {};
@@ -47,7 +50,7 @@ export default function AdminAds() {
       form.append("image", file);
       form.append("title", title.trim());
       form.append("description", description.trim());
-      const res = await fetch(`${BASE}/api/ads`, { method: "POST", body: form, credentials: "include", headers: adminHeaders() });
+      const res = await fetch(`${API_BASE}/api/ads`, { method: "POST", body: form, headers: adminHeaders() });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
@@ -67,7 +70,7 @@ export default function AdminAds() {
 
   const deleteAd = useMutation({
     mutationFn: async (id: number) => {
-      const res = await fetch(`${BASE}/api/ads/${id}`, { method: "DELETE", credentials: "include", headers: adminHeaders() });
+      const res = await fetch(`${API_BASE}/api/ads/${id}`, { method: "DELETE", headers: adminHeaders() });
       if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () => {
