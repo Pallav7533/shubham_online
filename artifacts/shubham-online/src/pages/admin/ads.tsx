@@ -24,7 +24,7 @@ const adminHeaders = (): Record<string, string> => {
 };
 
 async function fetchAds(): Promise<Ad[]> {
-  const res = await fetch(`${BASE}/api/ads`);
+  const res = await fetch(`${BASE}/api/ads`, { cache: "no-store" }); // ← cache add
   if (!res.ok) throw new Error("Failed to fetch ads");
   return res.json();
 }

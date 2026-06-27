@@ -26,10 +26,11 @@ function AdsSection() {
   const { data: ads } = useQuery<Ad[]>({
     queryKey: ["ads"],
     queryFn: async () => {
-      const res = await fetch(`${BASE}/api/ads`);
+      const res = await fetch(`${BASE}/api/ads`, { cache: "no-store" }); // ← cache add
       if (!res.ok) return [];
       return res.json();
     },
+    staleTime: 0, // ← ADD
   });
 
   if (!ads || ads.length === 0) return null;
@@ -45,7 +46,7 @@ function AdsSection() {
           <h2 className="font-serif text-4xl font-bold text-primary">મહત્વની જાહેરાતો</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {ads.map((ad) => (
+        {ads.map((ad: Ad) => (
             <div
               key={ad.id}
               className="group bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"

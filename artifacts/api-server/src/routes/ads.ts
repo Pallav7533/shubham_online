@@ -73,6 +73,7 @@ async function saveImage(file: Express.Multer.File): Promise<string> {
 }
 
 router.get("/ads", async (_req, res): Promise<void> => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   const ads = await db
     .select()
     .from(advertisementsTable)
